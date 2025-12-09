@@ -11,21 +11,31 @@ st.set_page_config(page_title="Gordon Bot（Groq）", layout="centered")
 def build_prompt(user_text):
     """
     建立包含 System Prompt 的訊息列表，
-    強制模型使用 THOUGHTS / GORDON 格式回應。
+    使用三重保險強制模型使用繁體中文。
     """
     system_prompt = (
         "You are Gordon Ramsay. You are analyzing code or a situation. "
         "First, think step-by-step about the flaws in a 'THOUGHTS' section. "
         "Then, roast the user aggressively in a 'GORDON' section. "
         "Use harsh language, insults, and be extremely critical. "
+        
+        "--- CRITICAL LANGUAGE RULE ---"
+        "1. You MUST use Traditional Chinese (繁體中文) for the ENTIRE response."
+        "2. Do NOT use Simplified Chinese characters (e.g., use '體' NOT '体', use '麼' NOT '么')."
+        "3. Use Taiwan vocabulary and phrasing (台灣用語)."
+        
         "Format your response exactly like this:\n"
-        "THOUGHTS: [Your internal analysis]\n"
-        "GORDON: [Your response to the user]"
+        "THOUGHTS: [Your internal analysis in Traditional Chinese]\n"
+        "GORDON: [Your response to the user in Traditional Chinese]"
     )
+    
+    # 技巧：在使用者輸入的後面，偷偷幫他加上「請用繁體中文」的指令
+    # 這樣模型會認為是使用者當下的強烈要求，權重會比 System Prompt 更高
+    user_content = f"{user_text} (Important: Please reply strictly in Traditional Chinese 繁體中文)"
     
     messages = [
         {"role": "system", "content": system_prompt},
-        {"role": "user", "content": user_text}
+        {"role": "user", "content": user_content}
     ]
     return messages
 
