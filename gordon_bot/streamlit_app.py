@@ -31,9 +31,8 @@ def build_prompt(user_text):
 
 def call_groq_api(messages, model, api_key):
     """
-    呼叫 Groq API (使用正確的 .com 網址與標準 OpenAI 格式)
+    呼叫 Groq API
     """
-    # 修正：網址必須是 api.groq.com，且路徑包含 /openai
     url = "https://api.groq.com/openai/v1/chat/completions"
     
     headers = {
@@ -48,13 +47,11 @@ def call_groq_api(messages, model, api_key):
         "max_tokens": 1024
     }
     
-    # 設定 30 秒 timeout 避免卡死
     response = requests.post(url, json=payload, headers=headers, timeout=30)
     
     if response.status_code == 200:
         return response.json()["choices"][0]["message"]["content"]
     else:
-        # 如果出錯，拋出詳細錯誤訊息以便除錯
         raise Exception(f"Error {response.status_code}: {response.text}")
 
 # --- 3. Streamlit 主程式介面 ---
@@ -63,7 +60,6 @@ st.title("🔥 地獄廚神 Gordon — Groq 版")
 st.write("輸入你的問題（示範保留強烈批評與粗口風格）")
 
 # 步驟 A: 取得 API Key
-# 優先讀取環境變數，其次讀取 Streamlit Secrets
 env_key = os.getenv("GROQ_API_KEY")
 streamlit_key = None
 try:
@@ -73,11 +69,11 @@ except Exception:
 
 api_key = env_key or streamlit_key
 
-# 步驟 B: 設定模型 (修正原本的 400 Error)
-# 強制使用有效的 Groq 模型 ID
-current_model = "llama3-8b-8192"
+# 步驟 B: 設定模型 (CRITICAL UPDATE: 使用最新的 Llama 3.3)
+# 舊的 llama3-8b-8192 已被淘汰
+current_model = "llama-3.3-70b-versatile"
 
-# 步驟 C: 檢查 Mock 模式 (測試用)
+# 步驟 C: 檢查 Mock 模式
 mock_mode = os.getenv("GROQ_MOCK", "false").lower() in ("1", "true", "yes")
 
 if mock_mode:
@@ -93,7 +89,6 @@ user_input = st.text_area("你的問題 (例如：我的 Code 寫得好嗎？)",
 
 if st.button("送出罵我") and user_input.strip():
     
-    # 防呆機制
     if not api_key and not mock_mode:
         st.error("❌ 無法執行：缺少 API Key，請先設定 Secrets。")
         st.stop()
@@ -102,12 +97,10 @@ if st.button("送出罵我") and user_input.strip():
         raw_response = ""
         try:
             if mock_mode:
-                # 模擬回應
                 import time
                 time.sleep(1)
-                raw_response = "THOUGHTS: This is a simulation.\nGORDON: Wake up! You are in a simulation!"
+                raw_response = "THOUGHTS: Simulation.\nGORDON: This is fake!"
             else:
-                # 真實呼叫
                 raw_response = call_groq_api(build_prompt(user_input), model=current_model, api_key=api_key)
         
         except Exception as e:
@@ -116,11 +109,9 @@ if st.button("送出罵我") and user_input.strip():
 
     # 步驟 E: 解析並顯示結果
     if raw_response:
-        # 先顯示原始回應 (可摺疊)
         with st.expander("查看原始回應 (Raw Response)"):
             st.code(raw_response)
 
-        # 使用 Regex 解析 THOUGHTS 和 GORDON 區塊
         pattern = r"THOUGHTS\s*[:\-]\s*(.*?)GORDON\s*[:\-]\s*(.*)"
         match = re.search(pattern, raw_response, re.DOTALL | re.IGNORECASE)
         
@@ -131,6 +122,5 @@ if st.button("送出罵我") and user_input.strip():
             st.info(f"💭 **內心獨白 (Thoughts):**\n\n{thoughts_text}")
             st.error(f"🤬 **Gordon 暴怒:**\n\n{gordon_text}")
         else:
-            # 如果模型沒乖乖照格式回應，就直接顯示全部
             st.warning("模型回應未符合格式，直接顯示內容：")
             st.write(raw_response)
