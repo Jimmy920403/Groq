@@ -1,0 +1,17 @@
+#.env and secrets
+.env
+.venv/
+.venv
+
+# Python
+__pycache__/
+.pytest_cache/
+*.py[cod]
+
+# Editor
+.vscode/
+.idea/
+.DS_Store
+
+# Streamlit secrets (do not commit)
+.streamlit/secrets.toml
