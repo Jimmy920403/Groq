@@ -95,7 +95,7 @@ else:
         st.warning("⚠️ 未找到 API Key。請在 Streamlit Cloud 的 'Settings -> Secrets' 中設定 GROQ_API_KEY。")
 
 # 步驟 D: 使用者輸入區
-user_input = st.text_area("你的問題 (例如：我的 Code 寫得好嗎？)", height=120)
+user_input = st.text_area("你的問題 (例如：我把泡麵煮爛了)", height=120)
 
 if st.button("送出罵我") and user_input.strip():
     
